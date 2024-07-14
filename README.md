@@ -1,6 +1,6 @@
 # File Organizer
 
-A simple yet effective CLI-based file organizer with custom features.
+A simple yet effective CLI-based customizable file organizer.
 
 ## Setting up
 
