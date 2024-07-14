@@ -7,7 +7,7 @@ A simple yet effective CLI-based customizable file organizer.
 1. Clone this repository.  
 
     ```bash
-    git clone
+    git clone https://github.com/Whattastix/MyOrganizer.git
     ```
 
 2. Run `main.py -g` to generate configuration files.
