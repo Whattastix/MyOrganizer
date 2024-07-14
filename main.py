@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List
 
-import json5 as json
+import json
 
 
 def main():
@@ -15,7 +15,8 @@ def main():
         description="Easy to use file organizer."
     )
     parser.add_argument("-d", "--dry-run",
-                        help="do not perform folder and file creation, move, or deletion",
+                        help="do not perform folder and file creation,"
+                        " move, or deletion",
                         action="store_true")
     parser.add_argument("-v", "--verbose",
                         help="print extra info", action="store_true")
