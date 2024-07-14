@@ -88,11 +88,11 @@
         "sbsar": "Substance Files"
     },
 
-    "organize-folders": [
+    "folders-to-organize": [
         "$HOME/Downloads"
     ],
 
-    "settings": {
+    "special-file-types": {
         "unknown-extension": "Misc",
         "no-extension": "Misc",
         "executable-no-extension": "Executables",

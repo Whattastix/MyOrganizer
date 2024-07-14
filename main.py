@@ -30,7 +30,7 @@ def main():
 
     file_types_var: Dict[str, str]
     folders_to_organize: List[str]
-    settings: Dict[str, any]
+    special_file_types: Dict[str, any]
 
     try:
         with open(args_.config, encoding="utf-8") as file:
@@ -40,13 +40,13 @@ def main():
             else:
                 file_types_var = {}
             if "organize-folders" in temp:
-                folders_to_organize = temp["organize-folders"]
+                folders_to_organize = temp["folders-to-organize"]
             else:
                 folders_to_organize = []
-            if "settings" in temp:
-                settings = temp["settings"]
+            if "special-file-types" in temp:
+                special_file_types = temp["special-file-types"]
             else:
-                settings = {"unknown-extension": "Misc"}
+                special_file_types = {"unknown-extension": "Misc"}
             file.close()
     except FileNotFoundError:
         with open(args_.config, encoding="utf-8") as file:
@@ -75,13 +75,13 @@ def main():
             if not os.access(file, os.W_OK):
                 folder_name = "!ignore"
             elif file.is_dir():
-                if "directories" in settings:
-                    folder_name = settings["directories"]
+                if "directories" in special_file_types:
+                    folder_name = special_file_types["directories"]
                 else:
                     folder_name = "!ignore"
             elif file.is_symlink():
-                if "symlinks" in settings:
-                    folder_name = settings["symlinks"]
+                if "symlinks" in special_file_types:
+                    folder_name = special_file_types["symlinks"]
                 else:
                     for suffix in suffixes:
                         if suffix[1:] in file_types_var:
@@ -111,16 +111,16 @@ def main():
                             folder_name = file_types_var[suffix[1:]]
             if not folder_name and not suffixes \
                     and os.access(file, os.X_OK):
-                if "executable-no-extension" in settings:
-                    folder_name = settings["executable-no-extension"]
-                elif "no-extension" in settings:
-                    folder_name = settings["no-extension"]
+                if "executable-no-extension" in special_file_types:
+                    folder_name = special_file_types["executable-no-extension"]
+                elif "no-extension" in special_file_types:
+                    folder_name = special_file_types["no-extension"]
                 else:
-                    folder_name = settings["unknown-extension"]
+                    folder_name = special_file_types["unknown-extension"]
             elif not folder_name and not suffixes:
-                folder_name = settings["no-extension"]
+                folder_name = special_file_types["no-extension"]
             if not folder_name:
-                folder_name = settings["unknown-extension"]
+                folder_name = special_file_types["unknown-extension"]
             if folder_name.startswith("!"):
                 match folder_name:
                     case "!ignore":
