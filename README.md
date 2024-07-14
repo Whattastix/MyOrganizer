@@ -23,7 +23,7 @@ A simple yet effective CLI-based file organizer with custom features.
     python3 main.py -g
     ```
 
-4. [Edit the config files as needed.](./CONFIG.MD) An example configuration file is included.
+4. [Edit the config files as needed.](CONFIG.MD) An example configuration file is included.
 
 5. Run the file.
 
