@@ -32,7 +32,8 @@ def main():
 
     file_types_var: Dict[str, str]
     folders_to_organize: List[str]
-    special_file_types: Dict[str, any]
+    special_file_types: Dict[str, str]
+    settings: Dict[str, any]
 
     try:
         with open(args_.config, encoding="utf-8") as file:
@@ -49,6 +50,12 @@ def main():
                 special_file_types = temp["special-file-types"]
             else:
                 special_file_types = {"unknown-extension": "Misc"}
+            if "settings" in temp:
+                settings = temp["settings"]
+            else:
+                settings = {
+                    "handle-locked-Files": False
+                }
             file.close()
     except FileNotFoundError:
         with open(args_.config, encoding="utf-8") as file:
@@ -93,21 +100,27 @@ def main():
                     suffixes[-1][1:] == "lock" or
                     file.name.startswith("~")
                     ):
-                file_name = file.name
-                for substring in [".lock", "lock", "~", "#"]:
-                    file_name = file_name.replace(substring, "")
-                for file_ in files:
-                    if file_.name == file_name:
-                        files.remove(file_)
-                        folder_name = "!ignore"
-                        break
+                if ("handle-locked-files" in settings
+                        and settings["handle-locked-files"]):
+                    file_name = file.name
+                    for substring in [".lock", "lock", "~", "#"]:
+                        file_name = file_name.replace(substring, "")
+                    for file_ in files:
+                        if file_.name == file_name:
+                            files.remove(file_)
+                            folder_name = "!ignore"
+                            break
+                elif suffixes[-1][1:] == "lock":
+                    suffixes.pop()
             else:
                 file_name = file.name
-                for file_ in files:
-                    if file_name in file_.name:
-                        files.remove(file_)
-                        folder_name = "!ignore"
-                        break
+                if ("handle-locked-files" in settings
+                        and settings["handle-locked-files"]):
+                    for file_ in files:
+                        if file_name in file_.name:
+                            files.remove(file_)
+                            folder_name = "!ignore"
+                            break
                 if "extracted-archives" in special_file_types and (
                         ".tar" in file.suffixes or
                         ".zip" in file.suffixes or

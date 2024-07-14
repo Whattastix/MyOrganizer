@@ -47,3 +47,7 @@ This is where you add folders to be handled. The syntax is as follows:
 ```
 
 It is recommended that you write the the absolute path of the directories. If you want to point to your home directory, you can use `$HOME` which will be replaced with `Path.home()`.
+
+## Settings
+
+* `handle-locked-files`(boolean): Whether or not to handle files that are potentially under use. Since the code loops through the file list, it may cause the program to slow down if set to `true`.

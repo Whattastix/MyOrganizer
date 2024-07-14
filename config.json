@@ -99,5 +99,10 @@
         "directories": "!ignore",
         "symlinks": "!ignore",
         "extracted-archives": "!movetotrash"
+    },
+
+    "settings": {
+        "handle-locked-files": true
     }
+
 }
