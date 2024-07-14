@@ -4,8 +4,9 @@ import os
 import shutil
 from pathlib import Path
 from typing import Dict, List
-
 import json
+
+from send2trash import send2trash
 
 
 def main():
@@ -124,13 +125,18 @@ def main():
             if folder_name.startswith("!"):
                 match folder_name:
                     case "!ignore":
-                        print(f"Ignoring {file}")
+                        if not args_.quiet:
+                            print(f"Ignoring {file}")
                         continue
                     case "!delete":
                         if not args_.quiet:
                             print(f"Deleting {file}")
                         if not args_.dry_run:
                             os.remove(file)
+                    case "!movetotrash":
+                        if not args_.quiet:
+                            print(f"Sending {file} to trash")
+                            send2trash(file)
 
             destination_folder: Path = folder.joinpath(folder_name)
             if not args_.dry_run and not os.path.exists(destination_folder):

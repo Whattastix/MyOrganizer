@@ -21,6 +21,7 @@ As seen above, suffixes are written first and then the destination folder is wri
 
 * `!ignore`: Ignore the file.
 * `!delete`: Delete the file.
+* `!movetotrash`: Move the file to the trash bin.
 
 ## Special File Types
 
