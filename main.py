@@ -52,7 +52,7 @@ def main():
                     }
                 }))
             if not args_.quiet:
-                print("Configuration file was missing and was automatically generated.")
+                print("Configuration file was missing and was automatically generated. Please edit it as necessary")
         exit(3)
 
     for folder in folders_to_organize:
