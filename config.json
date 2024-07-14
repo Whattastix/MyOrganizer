@@ -97,6 +97,7 @@
         "no-extension": "Misc",
         "executable-no-extension": "Executables",
         "directories": "!ignore",
-        "symlinks": "!ignore"
+        "symlinks": "!ignore",
+        "extracted-archives": "!movetotrash"
     }
 }

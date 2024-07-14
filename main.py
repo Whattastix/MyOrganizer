@@ -11,6 +11,7 @@ from send2trash import send2trash
 
 def main():
     """Main function."""
+
     parser = argparse.ArgumentParser(
         prog="MyOrganizer",
         description="Easy to use file organizer."
@@ -101,11 +102,25 @@ def main():
                         folder_name = "!ignore"
                         break
             else:
+                file_name = file.name
                 for file_ in files:
                     if file_name in file_.name:
                         files.remove(file_)
                         folder_name = "!ignore"
                         break
+                if "extracted-archives" in special_file_types and (
+                        ".tar" in file.suffixes or
+                        ".zip" in file.suffixes or
+                        ".7z" in file.suffixes or
+                        ".rar" in file.suffixes):
+                    file_name = str(file)
+                    while len(Path(file_name).suffixes > 0):
+                        file_name = Path(file_name).stem
+                    file_name = Path(file_name).name
+                    for file_ in files:
+                        if file_.is_dir() and file_.name == file_name:
+                            folder_name = \
+                                special_file_types["extracted-archives"]
                 if not folder_name:
                     for suffix in suffixes:
                         if suffix[1:] in file_types_var:

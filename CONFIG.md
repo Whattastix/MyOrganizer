@@ -28,10 +28,11 @@ As seen above, suffixes are written first and then the destination folder is wri
 There are also some special file types located in `special-file-types`.:
 
 * `unknown-extension`: Files with no matching extensions. Defaults to `!ignore`.
-* `no-extension`: Files without any suffixes. Falls back to `unknown-extension`.
-* `executable-no-extension`: Executable files (x flag) without any suffixes. Falls back to `no-extension`.
+* `no-extension`: Files without any suffixes. Fallbacks to `unknown-extension`.
+* `executable-no-extension`: Executable files (x flag) without any suffixes. Fallbacks to `no-extension`.
 * `directories`: Directories. Ignored if not present.
-* `symlinks`: Symlinks. Falls back to the latest suffix.
+* `symlinks`: Symlinks. Fallbacks to the file's last suffix.
+* `extracted-archives`: Archive files with extracted version found. Fallbacks to the file's last suffix.
 
 ## Folders to be organized
 
