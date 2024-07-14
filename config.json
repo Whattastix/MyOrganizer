@@ -1,12 +1,11 @@
 {
 	"file-types": {
-		// Executables
 		"exe": "Executables/Windows",
 		"msi": "Executables/Windows",
 		"x86": "Executables",
 		"x86-64": "Executables",
 		"AppImage": "Executables/AppImage",
-		// Archives
+
         "tar": "Archives",
 		"zip": "Archives/Compressed",
 		"gz": "Archives/Compressed",
@@ -14,7 +13,7 @@
 		"rar": "Archives/Compressed",
 		"7z": "Archives/Compressed",
 		"xz": "Archives/Compressed",
-		// Documents
+
 		"pdf": "Documents",
 		"doc": "Documents",
 		"docx": "Documents",
@@ -25,10 +24,10 @@
 		"xlsx": "Documents",
 		"txt": "Documents",
 		"log": "Documents",
-		// Console related
+
 		"nro": "Switch homebrew",
 		"nxtheme": "Switch homebrew",
-		// Photos
+
 		"png": "Picture Media",
 		"jpg": "Picture Media",
 		"jpeg": "Picture Media",
@@ -36,24 +35,24 @@
 		"webp": "Picture Media",
 		"ico": "Picture Media",
 		"exr": "Picture Media",
-		// Audio
+
 		"mp3": "Audio Media",
 		"wav": "Audio Media",
 		"ogg": "Audio Media",
 		"aup3": "Audacity Projects",
-		// Video
+
 		"avi": "Video Media",
 		"mp4": "Video Media",
 		"bik": "Video Media",
 		"webm": "Video Media",
-		// Unfinished installs
+
 		"part": "!ignore",
 		"crdownload": "!ignore",
 		"cmd": "Command Files",
 		"com": "Command Files",
 		"bat": "Command Files",
 		"ps1": "Command Files",
-		//Programming
+
 		"json": "JSON Files",
 		"jar": "Java Files",
 		"java": "Programming/Java",
@@ -66,16 +65,17 @@
 		"html": "Programming/Web",
 		"css": "Programming/Web",
 		"js": "Programming/Web",
-		// Game Roms
+
 		"z64": "Game Roms",
 		"gb": "Game Roms",
 		"gbc": "Game Roms",
 		"gba": "Game Roms",
-		// Package files
+
 		"rpm": "Packages",
 		"deb": "Packages",
 		"ymp": "Packages",
-		// Misc
+		"pkg": "Packages",
+
 		"iso": "Image Files",
 		"img": "Image Files",
 		"ttf": "Fonts",
