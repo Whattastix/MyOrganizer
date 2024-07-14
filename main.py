@@ -14,11 +14,16 @@ def main():
         prog="MyOrganizer",
         description="Easy to use file organizer."
     )
-    parser.add_argument("-d", "--dry-run", help="do not perform folder and file creation, move, or deletion", action="store_true")
-    parser.add_argument("-v", "--verbose", help="print extra info", action="store_true")
-    parser.add_argument("-q", "--quiet", help="print no output", action="store_true")
+    parser.add_argument("-d", "--dry-run",
+                        help="do not perform folder and file creation, move, or deletion",
+                        action="store_true")
+    parser.add_argument("-v", "--verbose",
+                        help="print extra info", action="store_true")
+    parser.add_argument("-q", "--quiet", help="print no output",
+                        action="store_true")
     parser.add_argument("-c", "--config", help="specify config file",
-                        default=os.path.join(Path(os.path.realpath(__file__)).parent, "config.json"), action="append")
+                        default=Path(__file__).resolve()
+                        .parent.joinpath("config.json"), action="append")
 
     args_ = parser.parse_args()
 
@@ -52,15 +57,16 @@ def main():
                     }
                 }))
             if not args_.quiet:
-                print("Configuration file was missing and was automatically generated. Please edit it as necessary.")
+                print("Configuration file was missing and was "
+                      "automatically generated. Please edit it as necessary.")
         exit(3)
 
     for folder in folders_to_organize:
         if folder.startswith("$"):
             folder = folder.replace("$HOME", str(Path.home()))
-        for file in os.listdir(folder):
-            file = Path(os.path.join(folder, file))
-            suffixes: List[str] = Path(file).suffixes
+        folder = Path(folder)
+        for file in list(folder.glob("*")):
+            suffixes: List[str] = file.suffixes
             foldername: str = None
 
             try:
@@ -70,13 +76,17 @@ def main():
                     foldername = settings["symlinks"]
                 else:
                     if suffixes and suffixes[-1].endswith("#"):
-                        suffixes[-1] = suffixes[-1][:-1]  # Lock files with "#" have the hash symbol removed
+                        # Lock files with "#" have the hash symbol removed
+                        suffixes[-1] = suffixes[-1][:-1]
                     elif suffixes and suffixes[-1][1:] == "lock":
-                        suffixes.pop()  # Ignore the "lock" suffix because it is usually used by editors
+                        # Ignore the "lock" suffix
+                        # because it is usually used by editors
+                        suffixes.pop()
                     for suffix in suffixes:
                         if suffix[1:] in file_types_var:
                             foldername = file_types_var[suffix[1:]]
-                if not foldername and not suffixes and os.access(file, os.X_OK):
+                if not foldername and not suffixes \
+                        and os.access(file, os.X_OK):
                     if "executable-no-extension" in settings:
                         foldername = settings["executable-no-extension"]
                     elif "no-extension" in settings:
@@ -98,11 +108,11 @@ def main():
                         if not args_.dry_run:
                             os.remove(file)
 
-            destination_folder: str = os.path.join(folder, foldername)
+            destination_folder: Path = folder.joinpath(foldername)
             if not args_.dry_run and not os.path.exists(destination_folder):
                 os.makedirs(destination_folder)
 
-            destination_file: Path = os.path.join(destination_folder, file.name)
+            destination_file: Path = destination_folder.joinpath(file.name)
             if not args_.quiet:
                 print(f"Moving {file}\nDestination: {destination_file}")
             if not args_.dry_run:
