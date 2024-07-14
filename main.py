@@ -66,40 +66,63 @@ def main():
         if folder.startswith("$"):
             folder = folder.replace("$HOME", str(Path.home()))
         folder = Path(folder)
-        for file in list(folder.glob("*")):
-            suffixes: List[str] = file.suffixes
-            foldername: str = None
 
-            try:
-                if file.is_dir():
-                    foldername = settings["directories"]
-                elif file.is_symlink():
-                    foldername = settings["symlinks"]
+        files = list(folder.glob("*"))
+
+        for file in files:
+            suffixes: List[str] = file.suffixes
+            folder_name: str = None
+            if not os.access(file, os.W_OK):
+                folder_name = "!ignore"
+            elif file.is_dir():
+                if "directories" in settings:
+                    folder_name = settings["directories"]
                 else:
-                    if suffixes and suffixes[-1].endswith("#"):
-                        # Lock files with "#" have the hash symbol removed
-                        suffixes[-1] = suffixes[-1][:-1]
-                    elif suffixes and suffixes[-1][1:] == "lock":
-                        # Ignore the "lock" suffix
-                        # because it is usually used by editors
-                        suffixes.pop()
+                    folder_name = "!ignore"
+            elif file.is_symlink():
+                if "symlinks" in settings:
+                    folder_name = settings["symlinks"]
+                else:
                     for suffix in suffixes:
                         if suffix[1:] in file_types_var:
-                            foldername = file_types_var[suffix[1:]]
-                if not foldername and not suffixes \
-                        and os.access(file, os.X_OK):
-                    if "executable-no-extension" in settings:
-                        foldername = settings["executable-no-extension"]
-                    elif "no-extension" in settings:
-                        foldername = settings["no-extension"]
-                    else:
-                        foldername = settings["unknown-extension"]
-                elif not foldername:
-                    foldername = settings["unknown-extension"]
-            except KeyError:
-                foldername = "!ignore"
-            if foldername.startswith("!"):
-                match foldername:
+                            folder_name = file_types_var[suffix[1:]]
+            elif suffixes and (
+                    suffixes[-1].endswith("#") or
+                    suffixes[-1][1:] == "lock" or
+                    file.name.startswith("~")
+                    ):
+                file_name = file.name
+                for substring in [".lock", "lock", "~", "#"]:
+                    file_name = file_name.replace(substring, "")
+                for file_ in files:
+                    if file_.name == file_name:
+                        files.remove(file_)
+                        folder_name = "!ignore"
+                        break
+            else:
+                for file_ in files:
+                    if file_name in file_.name:
+                        files.remove(file_)
+                        folder_name = "!ignore"
+                        break
+                if not folder_name:
+                    for suffix in suffixes:
+                        if suffix[1:] in file_types_var:
+                            folder_name = file_types_var[suffix[1:]]
+            if not folder_name and not suffixes \
+                    and os.access(file, os.X_OK):
+                if "executable-no-extension" in settings:
+                    folder_name = settings["executable-no-extension"]
+                elif "no-extension" in settings:
+                    folder_name = settings["no-extension"]
+                else:
+                    folder_name = settings["unknown-extension"]
+            elif not folder_name and not suffixes:
+                folder_name = settings["no-extension"]
+            if not folder_name:
+                folder_name = settings["unknown-extension"]
+            if folder_name.startswith("!"):
+                match folder_name:
                     case "!ignore":
                         print(f"Ignoring {file}")
                         continue
@@ -109,7 +132,7 @@ def main():
                         if not args_.dry_run:
                             os.remove(file)
 
-            destination_folder: Path = folder.joinpath(foldername)
+            destination_folder: Path = folder.joinpath(folder_name)
             if not args_.dry_run and not os.path.exists(destination_folder):
                 os.makedirs(destination_folder)
 
