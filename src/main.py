@@ -26,7 +26,8 @@ def main():
                         action="store_true")
     parser.add_argument("-c", "--config", help="specify config file",
                         default=Path(__file__).resolve()
-                        .parent.joinpath("config.json"), action="append")
+                        .parent.parent.joinpath("config/config.json"),
+                        action="store")
 
     args_ = parser.parse_args()
 
@@ -42,7 +43,7 @@ def main():
                 file_types_var = temp["file-types"]
             else:
                 file_types_var = {}
-            if "organize-folders" in temp:
+            if "folders-to-organize" in temp:
                 folders_to_organize = temp["folders-to-organize"]
             else:
                 folders_to_organize = []
