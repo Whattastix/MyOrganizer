@@ -24,9 +24,12 @@ def main():
                         help="print extra info", action="store_true")
     parser.add_argument("-q", "--quiet", help="print no output",
                         action="store_true")
+    parser.add_argument("-D", "--debug", help=argparse.SUPPRESS,
+                        action="store_true")
     parser.add_argument("-c", "--config", help="specify config file",
                         default=Path(__file__).resolve()
-                        .parent.joinpath("config.json"), action="append")
+                        .parent.parent.joinpath("config/config.json"),
+                        action="store")
 
     args_ = parser.parse_args()
 
@@ -42,7 +45,7 @@ def main():
                 file_types_var = temp["file-types"]
             else:
                 file_types_var = {}
-            if "organize-folders" in temp:
+            if "folders-to-organize" in temp:
                 folders_to_organize = temp["folders-to-organize"]
             else:
                 folders_to_organize = []
@@ -79,8 +82,11 @@ def main():
         files = list(folder.glob("*"))
 
         for file in files:
+
             suffixes: List[str] = file.suffixes
             folder_name: str = None
+            files.remove(file)
+
             if not os.access(file, os.W_OK):
                 folder_name = "!ignore"
             elif file.is_dir():
@@ -100,6 +106,7 @@ def main():
                     suffixes[-1][1:] == "lock" or
                     file.name.startswith("~")
                     ):
+
                 if ("handle-locked-files" in settings
                         and settings["handle-locked-files"]):
                     file_name = file.name
@@ -112,6 +119,7 @@ def main():
                             break
                 elif suffixes[-1][1:] == "lock":
                     suffixes.pop()
+
             else:
                 file_name = file.name
                 if ("handle-locked-files" in settings
@@ -121,17 +129,15 @@ def main():
                             files.remove(file_)
                             folder_name = "!ignore"
                             break
+
                 if "extracted-archives" in special_file_types and (
                         ".tar" in file.suffixes or
                         ".zip" in file.suffixes or
                         ".7z" in file.suffixes or
                         ".rar" in file.suffixes):
                     file_name = str(file)
-                    while len(Path(file_name).suffixes > 0):
-                        file_name = Path(file_name).stem
-                    file_name = Path(file_name).name
                     for file_ in files:
-                        if file_.is_dir() and file_.name == file_name:
+                        if file_.is_dir() and file_name in file_.name:
                             folder_name = \
                                 special_file_types["extracted-archives"]
                 if not folder_name:
@@ -150,6 +156,8 @@ def main():
                 folder_name = special_file_types["no-extension"]
             if not folder_name:
                 folder_name = special_file_types["unknown-extension"]
+            if args_.debug:
+                print(folder_name)
             if folder_name.startswith("!"):
                 match folder_name:
                     case "!ignore":
@@ -161,16 +169,26 @@ def main():
                             print(f"Deleting {file}")
                         if not args_.dry_run:
                             os.remove(file)
+                        continue
                     case "!movetotrash":
                         if not args_.quiet:
                             print(f"Sending {file} to trash")
                             send2trash(file)
+                        continue
 
             destination_folder: Path = folder.joinpath(folder_name)
-            if not args_.dry_run and not os.path.exists(destination_folder):
-                os.makedirs(destination_folder)
+            if not args_.dry_run and not destination_folder.exists():
+                destination_folder.mkdir()
 
             destination_file: Path = destination_folder.joinpath(file.name)
+            i = 1
+            while destination_file.exists():
+                stem = destination_file.name
+                while len(Path(file_name).suffixes) > 0:
+                    stem = Path(Path(file_name).stem)
+                destination_file = destination_file.parent.joinpath(
+                    f"{str(stem)}({i})".join(destination_file.suffixes))
+                i += 1
             if not args_.quiet:
                 print(f"Moving {file}\nDestination: {destination_file}")
             if not args_.dry_run:
