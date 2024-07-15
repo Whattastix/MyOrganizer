@@ -128,7 +128,7 @@ def main():
                         ".7z" in file.suffixes or
                         ".rar" in file.suffixes):
                     file_name = str(file)
-                    while len(Path(file_name).suffixes > 0):
+                    while len(Path(file_name).suffixes) > 0:
                         file_name = Path(file_name).stem
                     file_name = Path(file_name).name
                     for file_ in files:
