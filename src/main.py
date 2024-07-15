@@ -82,8 +82,11 @@ def main():
         files = list(folder.glob("*"))
 
         for file in files:
+
             suffixes: List[str] = file.suffixes
             folder_name: str = None
+            files.remove(file)
+
             if not os.access(file, os.W_OK):
                 folder_name = "!ignore"
             elif file.is_dir():
@@ -119,7 +122,6 @@ def main():
                 file_name = file.name
                 if ("handle-locked-files" in settings
                         and settings["handle-locked-files"]):
-                    files.remove(file)
                     for file_ in files:
                         if file_name in file_.name:
                             files.remove(file_)
