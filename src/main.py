@@ -106,6 +106,7 @@ def main():
                     suffixes[-1][1:] == "lock" or
                     file.name.startswith("~")
                     ):
+
                 if ("handle-locked-files" in settings
                         and settings["handle-locked-files"]):
                     file_name = file.name
@@ -118,6 +119,7 @@ def main():
                             break
                 elif suffixes[-1][1:] == "lock":
                     suffixes.pop()
+
             else:
                 file_name = file.name
                 if ("handle-locked-files" in settings
@@ -127,17 +129,15 @@ def main():
                             files.remove(file_)
                             folder_name = "!ignore"
                             break
+
                 if "extracted-archives" in special_file_types and (
                         ".tar" in file.suffixes or
                         ".zip" in file.suffixes or
                         ".7z" in file.suffixes or
                         ".rar" in file.suffixes):
                     file_name = str(file)
-                    while len(Path(file_name).suffixes) > 0:
-                        file_name = Path(file_name).stem
-                    file_name = Path(file_name).name
                     for file_ in files:
-                        if file_.is_dir() and file_.name == file_name:
+                        if file_.is_dir() and file_name in file_.name:
                             folder_name = \
                                 special_file_types["extracted-archives"]
                 if not folder_name:
@@ -177,10 +177,18 @@ def main():
                         continue
 
             destination_folder: Path = folder.joinpath(folder_name)
-            if not args_.dry_run and not os.path.exists(destination_folder):
-                os.makedirs(destination_folder)
+            if not args_.dry_run and not destination_folder.exists():
+                destination_folder.mkdir()
 
             destination_file: Path = destination_folder.joinpath(file.name)
+            i = 1
+            while destination_file.exists():
+                stem = destination_file.name
+                while len(Path(file_name).suffixes) > 0:
+                    stem = Path(Path(file_name).stem)
+                destination_file = destination_file.parent.joinpath(
+                    f"{str(stem)}({i})".join(destination_file.suffixes))
+                i += 1
             if not args_.quiet:
                 print(f"Moving {file}\nDestination: {destination_file}")
             if not args_.dry_run:
