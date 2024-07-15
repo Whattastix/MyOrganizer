@@ -24,6 +24,8 @@ def main():
                         help="print extra info", action="store_true")
     parser.add_argument("-q", "--quiet", help="print no output",
                         action="store_true")
+    parser.add_argument("-D", "--debug", help=argparse.SUPPRESS,
+                        action="store_true")
     parser.add_argument("-c", "--config", help="specify config file",
                         default=Path(__file__).resolve()
                         .parent.parent.joinpath("config/config.json"),
@@ -117,6 +119,7 @@ def main():
                 file_name = file.name
                 if ("handle-locked-files" in settings
                         and settings["handle-locked-files"]):
+                    files.remove(file)
                     for file_ in files:
                         if file_name in file_.name:
                             files.remove(file_)
@@ -151,6 +154,8 @@ def main():
                 folder_name = special_file_types["no-extension"]
             if not folder_name:
                 folder_name = special_file_types["unknown-extension"]
+            if args_.debug:
+                print(folder_name)
             if folder_name.startswith("!"):
                 match folder_name:
                     case "!ignore":
@@ -162,10 +167,12 @@ def main():
                             print(f"Deleting {file}")
                         if not args_.dry_run:
                             os.remove(file)
+                        continue
                     case "!movetotrash":
                         if not args_.quiet:
                             print(f"Sending {file} to trash")
                             send2trash(file)
+                        continue
 
             destination_folder: Path = folder.joinpath(folder_name)
             if not args_.dry_run and not os.path.exists(destination_folder):
