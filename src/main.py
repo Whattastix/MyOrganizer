@@ -87,7 +87,7 @@ def main():
             folder_name: str = None
             files.remove(file)
 
-            if not os.access(file, os.W_OK):
+            if not os.access(file, os.W_OK) or not os.access(file, os.R_OK):
                 folder_name = "!ignore"
             elif file.is_dir():
                 if "directories" in special_file_types:
