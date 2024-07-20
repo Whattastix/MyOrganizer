@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List
 import json
+import sys
 
 from send2trash import send2trash
 
@@ -75,7 +76,7 @@ def main():
             if not args_.quiet:
                 print("Configuration file was missing and was "
                       "automatically generated. Please edit it as necessary.")
-        exit(3)
+        sys.exit(3)
 
     for folder in folders_to_organize:
         if folder.startswith("$"):
