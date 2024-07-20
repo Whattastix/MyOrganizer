@@ -1,4 +1,4 @@
-# File Organizer
+# MyOrganizer
 
 A simple yet effective CLI-based customizable file organizer.
 
