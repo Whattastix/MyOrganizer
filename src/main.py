@@ -177,6 +177,7 @@ def main():
                     case "!movetotrash":
                         if not args_.quiet:
                             print(f"Sending {file} to trash")
+                        if not args_.dry_run:
                             send2trash(file)
                         continue
 
