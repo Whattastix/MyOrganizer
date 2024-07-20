@@ -38,6 +38,9 @@ def main():
     special_file_types: Dict[str, str]
     settings: Dict[str, any]
 
+    if args_.dry_run and not args_.quiet:
+        print("Running dry-run, no file will be modified")
+
     try:
         with open(args_.config, encoding="utf-8") as file:
             temp: Dict[str, any] = json.loads(file.read())
