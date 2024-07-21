@@ -3,3 +3,4 @@ env
 .flake8
 dist
 temp
+__pycache__
