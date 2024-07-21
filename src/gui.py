@@ -2,6 +2,7 @@
 """GUI classes and variables used by MyOrganizer"""
 
 from pathlib import Path
+from argparse import Namespace
 import errno
 
 from PySide6.QtWidgets import (QWidget, QProgressBar, QTextEdit,
@@ -12,7 +13,6 @@ from PySide6.QtCore import QObject, QThread, Signal, QTimer
 
 from organization_tools import get_folder_name, handle_file
 from config import Config
-from argparse import Namespace
 
 ICONPATH: str = (str(Path(__file__).resolve()
                  .parent.parent.joinpath("img/logo.png")))
@@ -66,6 +66,7 @@ class QLoad(QWidget):
 
         self.worker.finished.connect(self.worker_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.thread().quit)
         self.worker_thread.finished.connect(self.worker_thread.deleteLater)
 
         self.worker.moveToThread(self.worker_thread)

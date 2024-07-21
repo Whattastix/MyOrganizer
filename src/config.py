@@ -1,6 +1,6 @@
 """Configuration tools used by MyOrganizer"""
 from pathlib import Path
-from typing import Dict, List, overload
+from typing import Dict, List, overload, Optional, Union, Any
 import json
 
 
@@ -11,13 +11,19 @@ class Config:
     def __init__(self) -> None: ...
 
     @overload
-    def __init__(self, json_file: Path | str) -> None: ...
+    def __init__(self, json_file: str) -> None: ...
 
-    def __init__(self, json_file: Path | str | None) -> None:
+    @overload
+    def __init__(self, json_file: Path) -> None: ...
+
+    @overload
+    def __init__(self, json_file: None) -> None: ...
+
+    def __init__(self, json_file: Optional[Union[Path, str]]) -> None:
         self.file_types_var: Dict[str, str]
         self.folders_to_organize: List[str]
         self.special_file_types: Dict[str, str]
-        self.settings: Dict[str, any]
+        self.settings: Dict[str, Any]
 
         self.__have_read_file: bool = False
 
@@ -34,14 +40,9 @@ class Config:
         if not isinstance(json_file, Path):
             json_file = Path(json_file)
 
-        self.file_types_var: Dict[str, str]
-        self.folders_to_organize: List[str]
-        self.special_file_types: Dict[str, str]
-        self.settings: Dict[str, any]
-
         try:
             with open(json_file, encoding="utf-8") as file:
-                temp: Dict[str, any] = json.loads(file.read())
+                temp: Dict[str, dict] = json.loads(file.read())
 
                 if "file-types" in temp and len(temp["file-types"].keys()) > 0:
                     self.file_types_var = temp["file-types"]
