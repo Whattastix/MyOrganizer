@@ -2,7 +2,6 @@
 """GUI classes and variables used by MyOrganizer"""
 
 from pathlib import Path
-import sys
 import errno
 
 from PySide6.QtWidgets import (QWidget, QProgressBar, QTextEdit,
@@ -99,7 +98,7 @@ class Worker(QObject):
     update = Signal()
     finished = Signal()
 
-    def run(self, config, args_):
+    def run(self, config: Config, args_: Namespace):
         """GUI implementation of organize_folders."""
 
         self.folder_progress_set_range.emit(0, len(config.folders_to_organize))
@@ -108,20 +107,21 @@ class Worker(QObject):
         for folder in config.folders_to_organize:
             if folder.startswith("$"):
                 folder = folder.replace("$HOME", str(Path.home()))
-            folder = Path(folder)
+            folder_path = Path(folder)
             self.folder_update_label.emit(f"Scanning folder: {folder}")
 
-            if not folder.exists():
+            if not folder_path.exists():
                 if not args_.quiet:
-                    msgbox = QMessageBox(QMessageBox.Critical, "MyOrganizer",
-                                         f"Folder {folder.resolve()} does not "
+                    msgbox = QMessageBox(QMessageBox.Icon.Critical,
+                                         "MyOrganizer",
+                                         f"Folder {folder_path.resolve()} does not "
                                          "exist. Please double-check the path."
                                          )
                     msgbox.setWindowIcon(QIcon(ICONPATH))
                     msgbox.exec()
                     exit(errno.ENOENT)
 
-            files = list(folder.glob("*"))
+            files = list(folder_path.glob("*"))
 
             self.file_progress_set_range.emit(1, len(files))
             self.file_progress_update_value.emit(1)

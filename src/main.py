@@ -3,7 +3,7 @@
 import argparse
 import os
 from pathlib import Path
-from threading import Thread
+from typing import Optional
 import sys
 import errno
 
@@ -15,6 +15,9 @@ from PySide6.QtGui import QIcon, QTextCursor
 from PySide6.QtCore import QThread
 
 from gui import QLoad, ICONPATH
+
+ICON: Optional[QIcon] = None
+PYTHONFAULTHANDLER = 0
 
 
 def main() -> None:
@@ -53,7 +56,7 @@ def main() -> None:
         faulthandler.enable()
         global PYTHONFAULTHANDLER
         PYTHONFAULTHANDLER = 1
-        if args_.gui is True:
+        if args_.gui is True and isinstance(ICON, QIcon):
             msgbox = QMessageBox(QMessageBox.Icon.Information,
                                  "MyOrganizer", "Debug mode active.")
             msgbox.setWindowIcon(ICON)
@@ -62,7 +65,7 @@ def main() -> None:
             print("Debug mode active.")
 
     if args_.dry_run and not args_.quiet:
-        if args_.gui is True:
+        if args_.gui is True and isinstance(ICON, QIcon):
             msgbox = QMessageBox(QMessageBox.Icon.Information,
                                  "MyOrganizer", "Running dry-run,"
                                  " no file will be modified")
@@ -88,7 +91,7 @@ def read_config(args_: argparse.Namespace) -> Config:
         config = Config(args_.config)
     except Config.InadequateConfigError:
         if not args_.quiet:
-            if args_.gui is True:
+            if args_.gui is True and isinstance(ICON, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Warning,
                                      "MyOrganizer", "Configuration file "
                                      "was missing and was automatically "
@@ -103,7 +106,7 @@ def read_config(args_: argparse.Namespace) -> Config:
         sys.exit(3)
     except FileNotFoundError:
         if not args_.quiet:
-            if args_.gui is True:
+            if args_.gui is True and isinstance(ICON, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Warning,
                                      "MyOrganizer", "Configuration file "
                                      "was missing and was automatically "
@@ -118,7 +121,7 @@ def read_config(args_: argparse.Namespace) -> Config:
         sys.exit(errno.ENOENT)
     except PermissionError:
         if not args_.quiet:
-            if args_.gui is True:
+            if args_.gui is True and isinstance(ICON, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Critical,
                                      "MyOrganizer", "You do not have adequate"
                                      " permission to read "
@@ -131,7 +134,7 @@ def read_config(args_: argparse.Namespace) -> Config:
         sys.exit(errno.EPERM)
     except OSError as exc:
         if not args_.quiet:
-            if args_.gui is True:
+            if args_.gui is True and isinstance(ICON, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Critical,
                                      "MyOrganizer", f"An exception was raised."
                                      f" Details:\n{type(exc).__name__}: {exc}")
@@ -151,14 +154,14 @@ def organize_folders_cli(config: Config,
     for folder in config.folders_to_organize:
         if folder.startswith("$"):
             folder = folder.replace("$HOME", str(Path.home()))
-        folder = Path(folder)
+        folder_path = Path(folder)
 
-        if not folder.exists():
+        if not folder_path.exists():
             if not args_.quiet:
-                print(f"Folder {folder.resolve()} does not exist."
+                print(f"Folder {folder_path.resolve()} does not exist."
                       " Please double-check the path.")
 
-        files = list(folder.glob("*"))
+        files = list(folder_path.glob("*"))
 
         for file in files:
             files.remove(file)

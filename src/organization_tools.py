@@ -1,6 +1,6 @@
 """Organization tools for MyOrganizer"""
 from pathlib import Path
-from typing import overload, List, Callable
+from typing import List, Callable, Optional
 import os
 import argparse
 import shutil
@@ -11,10 +11,10 @@ from config import Config
 
 
 def get_folder_name(file: Path, files: List[Path], config: Config,
-                    args_: argparse.Namespace) -> str | None:
+                    args_: argparse.Namespace) -> str:
     """Gets folder name using the info in config file."""
     suffixes: List[str] = file.suffixes
-    folder_name: str = None
+    folder_name: Optional[str] = None
 
     if not os.access(file, os.W_OK) or not os.access(file, os.R_OK):
         folder_name = "!ignore"
@@ -92,20 +92,9 @@ def get_folder_name(file: Path, files: List[Path], config: Config,
     return folder_name
 
 
-@overload
-def handle_file(file: Path, parent_folder: str, folder_name: str,
-                args_: argparse.Namespace) -> None: ...
-
-
-@overload
 def handle_file(file: Path, parent_folder: str, folder_name: str,
                 args_: argparse.Namespace,
-                update_function: Callable[[str], None]) -> None: ...
-
-
-def handle_file(file: Path, parent_folder: str, folder_name: str,
-                args_: argparse.Namespace,
-                update_function: Callable[[str], None] | None):
+                update_function: Callable[[str], None]):
     """Handles files."""
     if folder_name.startswith("!"):
         match folder_name:
@@ -126,7 +115,7 @@ def handle_file(file: Path, parent_folder: str, folder_name: str,
                     send2trash(file)
                 return
 
-    destination_folder: Path = parent_folder.joinpath(folder_name)
+    destination_folder: Path = Path(parent_folder).joinpath(folder_name)
     if not args_.dry_run and not destination_folder.exists():
         destination_folder.mkdir()
 
