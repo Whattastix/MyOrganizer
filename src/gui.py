@@ -1,31 +1,35 @@
 #!/usr/bin/env python3
 """GUI classes and variables used by MyOrganizer"""
 
-from pathlib import Path
-from argparse import Namespace
 import errno
+from argparse import Namespace
+from pathlib import Path
 
-from PySide6.QtWidgets import (QWidget, QProgressBar, QTextEdit,
-                               QApplication, QVBoxLayout, QLabel,
-                               QMessageBox)
-from PySide6.QtGui import QIcon, QTextCursor
 from PySide6.QtCore import QObject, QThread, Signal, QTimer
+from PySide6.QtGui import QIcon, QTextCursor
+from PySide6.QtWidgets import (QWidget, QProgressBar, QTextEdit,
+                               QVBoxLayout, QLabel,
+                               QMessageBox)
 
-from organization_tools import get_folder_name, handle_file
 from config import Config
+from organization_tools import get_folder_name, handle_file
 
-ICONPATH: str = (str(Path(__file__).resolve()
-                 .parent.parent.joinpath("img/logo.png")))
+src_icon_path = Path(__file__).resolve().parent.parent.joinpath("img/logo.png")
+ICONPATH: str = (
+    str(src_icon_path) if src_icon_path.exists()
+    else str(Path(__file__).resolve().parent.joinpath("img/logo.png"))
+)
 
 
 class QLoad(QWidget):
     """Custom QWidget for MyOrganizer providing status as GUI."""
+
     def __init__(self, config, args_):
         super().__init__()
 
         self.setWindowTitle("MyOrganizer")
         self.setWindowIcon(QIcon(ICONPATH))
-        self.resize(400, 240)
+        self.setFixedSize(400, 240)
         self.setMinimumSize(400, 240)
 
         self.folder_progress = QProgressBar()
@@ -82,7 +86,7 @@ class QLoad(QWidget):
         self.wait_timer.start()
 
     def add_log_text(self, text: str):
-        """Adds text at the beginning of log"""
+        """Adds text at the beginning of the log"""
         self.log.moveCursor(QTextCursor.MoveOperation.Start)
         self.log.insertPlainText(text)
 
