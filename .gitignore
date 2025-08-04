@@ -11,6 +11,7 @@ env
 .flake8
 
 # Python/Pyinstaller folders
+build
 dist
 temp
 __pycache__
