@@ -1,16 +1,26 @@
-#!/bin/python3
+#!/usr/bin/env python3
+
 import argparse
 import os
-import shutil
 from pathlib import Path
-from typing import Dict, List
-import json
+from typing import Optional
 import sys
+import errno
 
-from send2trash import send2trash
+from config import Config
+from organization_tools import get_folder_name, handle_file
+
+from PySide6.QtWidgets import QMessageBox, QApplication, QWidget
+from PySide6.QtGui import QIcon, QTextCursor
+from PySide6.QtCore import QThread
+
+from gui import QLoad, ICONPATH
+
+icon: Optional[QIcon] = None
+PYTHONFAULTHANDLER = 0
 
 
-def main():
+def main() -> None:
     """Main function."""
 
     parser = argparse.ArgumentParser(
@@ -18,11 +28,15 @@ def main():
         description="Easy to use file organizer."
     )
     parser.add_argument("-d", "--dry-run",
-                        help="do not perform folder and file creation,"
-                        " move, or deletion",
+                        help=(
+                            "do not perform folder and file creation,"
+                            " move, or deletion"
+                        ),
                         action="store_true")
     parser.add_argument("-v", "--verbose",
                         help="print extra info", action="store_true")
+    parser.add_argument("-g", "--gui",
+                        help="Use gui instead of cli", action="store_true")
     parser.add_argument("-q", "--quiet", help="print no output",
                         action="store_true")
     parser.add_argument("-D", "--debug", help=argparse.SUPPRESS,
@@ -34,170 +48,140 @@ def main():
 
     args_ = parser.parse_args()
 
-    file_types_var: Dict[str, str]
-    folders_to_organize: List[str]
-    special_file_types: Dict[str, str]
-    settings: Dict[str, any]
+    global icon
+
+    if args_.gui is True:
+        app = QApplication(sys.argv)
+        icon = QIcon(ICONPATH)
+
+    if args_.debug and not args_.quiet:
+        import faulthandler
+        faulthandler.enable()
+        global PYTHONFAULTHANDLER
+        PYTHONFAULTHANDLER = 1
+        if args_.gui is True and isinstance(icon, QIcon):
+            msgbox = QMessageBox(QMessageBox.Icon.Information,
+                                 "MyOrganizer", "Debug mode active.")
+            msgbox.setWindowIcon(icon)
+            msgbox.exec()
+        else:
+            print("Debug mode active.")
 
     if args_.dry_run and not args_.quiet:
-        print("Running dry-run, no file will be modified")
+        if args_.gui is True and isinstance(icon, QIcon):
+            msgbox = QMessageBox(
+                QMessageBox.Icon.Information,
+                "MyOrganizer",
+                "Running dry-run,"
+                " no file will be modified"
+            )
+            msgbox.setWindowIcon(icon)
+            msgbox.exec()
+        else:
+            print("Running dry-run, no file will be modified")
 
+    config = read_config(args_)
+
+    if args_.gui is True:
+        window = QLoad(config=config, args_=args_)
+        window.show()
+        sys.exit(app.exec())
+    else:
+        organize_folders_cli(config=config, args_=args_)
+        sys.exit(os.X_OK)
+
+
+def read_config(args_: argparse.Namespace) -> Config:
+    """Reads the config file and handles possible exceptions."""
     try:
-        with open(args_.config, encoding="utf-8") as file:
-            temp: Dict[str, any] = json.loads(file.read())
-            if "file-types" in temp:
-                file_types_var = temp["file-types"]
+        config = Config(args_.config)
+    except Config.InadequateConfigError:
+        if not args_.quiet:
+            if args_.gui is True and isinstance(icon, QIcon):
+                msgbox = QMessageBox(QMessageBox.Icon.Warning,
+                                     "MyOrganizer", "Configuration file "
+                                                    "was missing and was automatically "
+                                                    "generated. Please edit it "
+                                                    "as necessary.")
+                msgbox.setWindowIcon(icon)
+                msgbox.exec()
             else:
-                file_types_var = {}
-            if "folders-to-organize" in temp:
-                folders_to_organize = temp["folders-to-organize"]
-            else:
-                folders_to_organize = []
-            if "special-file-types" in temp:
-                special_file_types = temp["special-file-types"]
-            else:
-                special_file_types = {"unknown-extension": "Misc"}
-            if "settings" in temp:
-                settings = temp["settings"]
-            else:
-                settings = {
-                    "handle-locked-Files": False
-                }
-            file.close()
-    except FileNotFoundError:
-        with open(args_.config, encoding="utf-8") as file:
-            file.write(json.dumps({
-                "file-types": {},
-                "organize-folders": [],
-                "settings": {
-                    "unknown-extension": "Misc"
-                    }
-                }))
-            if not args_.quiet:
                 print("Configuration file was missing and was "
-                      "automatically generated. Please edit it as necessary.")
+                      "automatically generated. Please edit "
+                      "it as necessary.")
         sys.exit(3)
+    except FileNotFoundError:
+        if not args_.quiet:
+            if args_.gui is True and isinstance(icon, QIcon):
+                msgbox = QMessageBox(QMessageBox.Icon.Warning,
+                                     "MyOrganizer", "Configuration file "
+                                                    "was missing and was automatically "
+                                                    "generated. Please edit it "
+                                                    "as necessary.")
+                msgbox.setWindowIcon(icon)
+                msgbox.exec()
+            else:
+                print("Configuration file was missing and was "
+                      "automatically generated. Please edit "
+                      "it as necessary.")
+        sys.exit(errno.ENOENT)
+    except PermissionError:
+        if not args_.quiet:
+            if args_.gui is True and isinstance(icon, QIcon):
+                msgbox = QMessageBox(QMessageBox.Icon.Critical,
+                                     "MyOrganizer", "You do not have adequate"
+                                                    " permission to read "
+                                                    f"{args_.config.name}.")
+                msgbox.setWindowIcon(icon)
+                msgbox.exec()
+            else:
+                print("You do not have adequate permission to read"
+                      f"{args_.config.name}.")
+        sys.exit(errno.EPERM)
+    except OSError as exc:
+        if not args_.quiet:
+            if args_.gui is True and isinstance(icon, QIcon):
+                msgbox = QMessageBox(QMessageBox.Icon.Critical,
+                                     "MyOrganizer", f"An exception was raised."
+                                                    f" Details:\n{type(exc).__name__}: {exc}")
+                msgbox.setWindowIcon(icon)
+                msgbox.exec()
+            else:
+                print("Configuration file could not be read. Please make "
+                      "sure that you have read permission to the file.")
+        sys.exit(errno.EIO)
 
-    for folder in folders_to_organize:
+    return config
+
+
+def organize_folders_cli(config: Config,
+                         args_: argparse.Namespace):
+    """Organizes the folders. Main part of MyOrganizer."""
+
+    file_val = 0
+
+    for folder in config.folders_to_organize:
         if folder.startswith("$"):
             folder = folder.replace("$HOME", str(Path.home()))
-        folder = Path(folder)
+        folder_path = Path(folder)
 
-        files = list(folder.glob("*"))
-
-        for file in files:
-
-            suffixes: List[str] = file.suffixes
-            folder_name: str = None
-            files.remove(file)
-
-            if not os.access(file, os.W_OK) or not os.access(file, os.R_OK):
-                folder_name = "!ignore"
-            elif file.is_dir():
-                if "directories" in special_file_types:
-                    folder_name = special_file_types["directories"]
-                else:
-                    folder_name = "!ignore"
-            elif file.is_symlink():
-                if "symlinks" in special_file_types:
-                    folder_name = special_file_types["symlinks"]
-                else:
-                    for suffix in suffixes:
-                        if suffix[1:] in file_types_var:
-                            folder_name = file_types_var[suffix[1:]]
-            elif suffixes and (
-                    suffixes[-1].endswith("#") or
-                    suffixes[-1][1:] == "lock" or
-                    file.name.startswith("~")
-                    ):
-
-                if ("handle-locked-files" in settings
-                        and settings["handle-locked-files"]):
-                    file_name = file.name
-                    for substring in [".lock", "lock", "~", "#"]:
-                        file_name = file_name.replace(substring, "")
-                    for file_ in files:
-                        if file_.name == file_name:
-                            files.remove(file_)
-                            folder_name = "!ignore"
-                            break
-                elif suffixes[-1][1:] == "lock":
-                    suffixes.pop()
-
-            else:
-                file_name = file.name
-                if ("handle-locked-files" in settings
-                        and settings["handle-locked-files"]):
-                    for file_ in files:
-                        if file_name in file_.name:
-                            files.remove(file_)
-                            folder_name = "!ignore"
-                            break
-
-                if "extracted-archives" in special_file_types and (
-                        ".tar" in file.suffixes or
-                        ".zip" in file.suffixes or
-                        ".7z" in file.suffixes or
-                        ".rar" in file.suffixes):
-                    file_name = str(file)
-                    for file_ in files:
-                        if file_.is_dir() and file_name in file_.name:
-                            folder_name = \
-                                special_file_types["extracted-archives"]
-                if not folder_name:
-                    for suffix in suffixes:
-                        if suffix[1:] in file_types_var:
-                            folder_name = file_types_var[suffix[1:]]
-            if not folder_name and not suffixes \
-                    and os.access(file, os.X_OK):
-                if "executable-no-extension" in special_file_types:
-                    folder_name = special_file_types["executable-no-extension"]
-                elif "no-extension" in special_file_types:
-                    folder_name = special_file_types["no-extension"]
-                else:
-                    folder_name = special_file_types["unknown-extension"]
-            elif not folder_name and not suffixes:
-                folder_name = special_file_types["no-extension"]
-            if not folder_name:
-                folder_name = special_file_types["unknown-extension"]
-            if args_.debug:
-                print(folder_name)
-            if folder_name.startswith("!"):
-                match folder_name:
-                    case "!ignore":
-                        if not args_.quiet:
-                            print(f"Ignoring {file}")
-                        continue
-                    case "!delete":
-                        if not args_.quiet:
-                            print(f"Deleting {file}")
-                        if not args_.dry_run:
-                            os.remove(file)
-                        continue
-                    case "!movetotrash":
-                        if not args_.quiet:
-                            print(f"Sending {file} to trash")
-                        if not args_.dry_run:
-                            send2trash(file)
-                        continue
-
-            destination_folder: Path = folder.joinpath(folder_name)
-            if not args_.dry_run and not destination_folder.exists():
-                destination_folder.mkdir()
-
-            destination_file: Path = destination_folder.joinpath(file.name)
-            i = 1
-            while destination_file.exists():
-                stem = destination_file.name
-                while len(Path(file_name).suffixes) > 0:
-                    stem = Path(Path(file_name).stem)
-                destination_file = destination_file.parent.joinpath(
-                    f"{str(stem)}({i})".join(destination_file.suffixes))
-                i += 1
+        if not folder_path.exists():
             if not args_.quiet:
-                print(f"Moving {file}\nDestination: {destination_file}")
-            if not args_.dry_run:
-                shutil.move(file, destination_file)
+                print(f"Folder {folder_path.resolve()} does not exist."
+                      " Please double-check the path.")
+
+        files = list(folder_path.iterdir())
+
+        while files:
+            file = files.pop(0)
+            folder_name = get_folder_name(
+                file=file, files=files, config=config, args_=args_)
+            handle_file(file=file, parent_folder=folder,
+                        folder_name=folder_name, args_=args_,
+                        update_function=print)
+            file_val += 1
+    if not args_.quiet:
+        print(f"Processed {file_val} files in {len(config.folders_to_organize)} folders.")
 
 
 if __name__ == "__main__":
