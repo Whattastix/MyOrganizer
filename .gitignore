@@ -1,6 +1,16 @@
+# Virtual Environment
+.venv
+venv
 env
+
+# IDE folders
 .vscode
+.idea
+
+# Flake8 Configuration
 .flake8
+
+# Python/Pyinstaller folders
 dist
 temp
 __pycache__
