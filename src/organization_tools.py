@@ -19,7 +19,7 @@ def get_folder_name(file: Path, files: List[Path], config: Config,
     if not os.access(file, os.W_OK) or not os.access(file, os.R_OK):
         folder_name = "!ignore"
     elif file.is_dir():
-        if "directories" in config.special_file_types:
+        if file.name not in config.file_types_var.values() and "directories" in config.special_file_types:
             folder_name = config.special_file_types["directories"]
         else:
             folder_name = "!ignore"
