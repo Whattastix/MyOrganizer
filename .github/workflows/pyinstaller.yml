@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
-name: Python application
+name: Pyinstaller
 
 on:
   push:
@@ -13,19 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  pyinstaller-build-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Create Executable
-        uses: sayyid5416/pyinstaller@v1
-        with:
-          python_ver: '3.13'
-          pyinstaller_ver: '>=6.15.0'
-          spec: 'MyOrganizer.spec'
-          requirements: 'requirements.txt'
-          upload_exe_with_name: 'MyOrganizer'
-  pyinstaller-build-linux:
-    runs-on: windows-ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: Create Executable
         uses: sayyid5416/pyinstaller@v1
