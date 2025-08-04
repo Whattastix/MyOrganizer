@@ -12,7 +12,7 @@ from config import Config
 
 def get_folder_name(file: Path, files: List[Path], config: Config,
                     args_: argparse.Namespace) -> str:
-    """Gets folder name using the info in config file."""
+    """Gets folder name using the info in the config file."""
     suffixes: List[str] = file.suffixes
     folder_name: Optional[str] = None
 
@@ -34,7 +34,7 @@ def get_folder_name(file: Path, files: List[Path], config: Config,
             suffixes[-1].endswith("#") or
             suffixes[-1][1:] == "lock" or
             file.name.startswith("~")
-            ):
+    ):
 
         if ("handle-locked-files" in config.settings
                 and config.settings["handle-locked-files"]):
