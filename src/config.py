@@ -8,22 +8,26 @@ class Config:
     """Configuration class used by MyOrganizer for the handling of config.json"""
 
     @overload
-    def __init__(self) -> None: ...
+    def __init__(self) -> None:
+        ...
 
     @overload
-    def __init__(self, json_file: str) -> None: ...
+    def __init__(self, json_file: str) -> None:
+        ...
 
     @overload
-    def __init__(self, json_file: Path) -> None: ...
+    def __init__(self, json_file: Path) -> None:
+        ...
 
     @overload
-    def __init__(self, json_file: None) -> None: ...
+    def __init__(self, json_file: None) -> None:
+        ...
 
-    def __init__(self, json_file: Optional[Union[Path, str]]) -> None:
-        self.file_types_var: Dict[str, str]
-        self.folders_to_organize: List[str]
-        self.special_file_types: Dict[str, str]
-        self.settings: Dict[str, Any]
+    def __init__(self, json_file: Optional[Union[Path, str]] = None) -> None:
+        self.file_types_var: Dict[str, str] = {}
+        self.folders_to_organize: List[str] = []
+        self.special_file_types: Dict[str, str] = {}
+        self.settings: Dict[str, Any] = {}
 
         self.__have_read_file: bool = False
 
@@ -32,7 +36,7 @@ class Config:
 
     def read_file(self, json_file: Path | str) -> None:
         """Reads the config file provided and assigns the values."""
-        if self.__have_read_file is True:
+        if self.__have_read_file:
             raise self.AlreadyRunError
 
         self.__have_read_file = True
@@ -84,17 +88,19 @@ class Config:
                     "organize-folders": [],
                     "settings": {
                         "unknown-extension": "Misc"
-                        }
-                    }))
+                    }
+                }))
                 file.close()
             raise FileNotFoundError from exc
 
     class AlreadyRunError(Exception):
         """Exception to raise when read_file is run more than once."""
+
         def __init__(self) -> None:
             super().__init__("read_file can only be used once.")
 
     class InadequateConfigError(Exception):
-        """Exception to raise when configuration file does not provide enough settings."""
+        """Exception to raise when the configuration file does not provide enough settings."""
+
         def __init__(self, *args: object) -> None:
             super().__init__(*args)
