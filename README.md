@@ -1,6 +1,8 @@
 # MyOrganizer
 
-A simple yet effective CLI-based customizable file organizer.
+<img src="./img/logo.png" width="20%" alt="MyOrganizer Logo">
+
+A simple yet effective customizable file organizer.
 
 ## Setting up
 
@@ -8,7 +10,7 @@ MyOrganizer supports both running directly and bundling via PyInstaller.
 
 ### Running Directly
 
-1. Clone this repository.  
+1. Clone this repository.
 
     ```bash
     git clone https://github.com/Whattastix/MyOrganizer.git
@@ -29,6 +31,12 @@ MyOrganizer supports both running directly and bundling via PyInstaller.
 
     ```bash
     python3 src/main.py 
+    ```
+
+   To enable GUI mode, pass `-g` command argument.
+
+   ```bash
+    python3 src/main.py -g
     ```
 
 ### Bundling via PyInstaller
@@ -61,4 +69,10 @@ MyOrganizer supports both running directly and bundling via PyInstaller.
 
     ```bash
     ./MyOrganizer
+    ```
+
+   To enable GUI mode, pass `-g` command argument.
+
+   ```bash
+    ./MyOrganizer -g
     ```
