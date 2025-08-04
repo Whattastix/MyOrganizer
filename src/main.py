@@ -16,7 +16,7 @@ from PySide6.QtCore import QThread
 
 from gui import QLoad, ICONPATH
 
-ICON: Optional[QIcon] = None
+icon: Optional[QIcon] = None
 PYTHONFAULTHANDLER = 0
 
 
@@ -28,8 +28,10 @@ def main() -> None:
         description="Easy to use file organizer."
     )
     parser.add_argument("-d", "--dry-run",
-                        help="do not perform folder and file creation,"
-                        " move, or deletion",
+                        help=(
+                            "do not perform folder and file creation,"
+                            " move, or deletion"
+                        ),
                         action="store_true")
     parser.add_argument("-v", "--verbose",
                         help="print extra info", action="store_true")
@@ -46,30 +48,34 @@ def main() -> None:
 
     args_ = parser.parse_args()
 
+    global icon
+
     if args_.gui is True:
         app = QApplication(sys.argv)
-        global ICON
-        ICON = QIcon(ICONPATH)
+        icon = QIcon(ICONPATH)
 
     if args_.debug and not args_.quiet:
         import faulthandler
         faulthandler.enable()
         global PYTHONFAULTHANDLER
         PYTHONFAULTHANDLER = 1
-        if args_.gui is True and isinstance(ICON, QIcon):
+        if args_.gui is True and isinstance(icon, QIcon):
             msgbox = QMessageBox(QMessageBox.Icon.Information,
                                  "MyOrganizer", "Debug mode active.")
-            msgbox.setWindowIcon(ICON)
+            msgbox.setWindowIcon(icon)
             msgbox.exec()
         else:
             print("Debug mode active.")
 
     if args_.dry_run and not args_.quiet:
-        if args_.gui is True and isinstance(ICON, QIcon):
-            msgbox = QMessageBox(QMessageBox.Icon.Information,
-                                 "MyOrganizer", "Running dry-run,"
-                                 " no file will be modified")
-            msgbox.setWindowIcon(ICON)
+        if args_.gui is True and isinstance(icon, QIcon):
+            msgbox = QMessageBox(
+                QMessageBox.Icon.Information,
+                "MyOrganizer",
+                "Running dry-run,"
+                " no file will be modified"
+            )
+            msgbox.setWindowIcon(icon)
             msgbox.exec()
         else:
             print("Running dry-run, no file will be modified")
@@ -91,13 +97,13 @@ def read_config(args_: argparse.Namespace) -> Config:
         config = Config(args_.config)
     except Config.InadequateConfigError:
         if not args_.quiet:
-            if args_.gui is True and isinstance(ICON, QIcon):
+            if args_.gui is True and isinstance(icon, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Warning,
                                      "MyOrganizer", "Configuration file "
-                                     "was missing and was automatically "
-                                     "generated. Please edit it "
-                                     "as necessary.")
-                msgbox.setWindowIcon(ICON)
+                                                    "was missing and was automatically "
+                                                    "generated. Please edit it "
+                                                    "as necessary.")
+                msgbox.setWindowIcon(icon)
                 msgbox.exec()
             else:
                 print("Configuration file was missing and was "
@@ -106,13 +112,13 @@ def read_config(args_: argparse.Namespace) -> Config:
         sys.exit(3)
     except FileNotFoundError:
         if not args_.quiet:
-            if args_.gui is True and isinstance(ICON, QIcon):
+            if args_.gui is True and isinstance(icon, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Warning,
                                      "MyOrganizer", "Configuration file "
-                                     "was missing and was automatically "
-                                     "generated. Please edit it "
-                                     "as necessary.")
-                msgbox.setWindowIcon(ICON)
+                                                    "was missing and was automatically "
+                                                    "generated. Please edit it "
+                                                    "as necessary.")
+                msgbox.setWindowIcon(icon)
                 msgbox.exec()
             else:
                 print("Configuration file was missing and was "
@@ -121,12 +127,12 @@ def read_config(args_: argparse.Namespace) -> Config:
         sys.exit(errno.ENOENT)
     except PermissionError:
         if not args_.quiet:
-            if args_.gui is True and isinstance(ICON, QIcon):
+            if args_.gui is True and isinstance(icon, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Critical,
                                      "MyOrganizer", "You do not have adequate"
-                                     " permission to read "
-                                     f"{args_.config.name}.")
-                msgbox.setWindowIcon(ICON)
+                                                    " permission to read "
+                                                    f"{args_.config.name}.")
+                msgbox.setWindowIcon(icon)
                 msgbox.exec()
             else:
                 print("You do not have adequate permission to read"
@@ -134,11 +140,11 @@ def read_config(args_: argparse.Namespace) -> Config:
         sys.exit(errno.EPERM)
     except OSError as exc:
         if not args_.quiet:
-            if args_.gui is True and isinstance(ICON, QIcon):
+            if args_.gui is True and isinstance(icon, QIcon):
                 msgbox = QMessageBox(QMessageBox.Icon.Critical,
                                      "MyOrganizer", f"An exception was raised."
-                                     f" Details:\n{type(exc).__name__}: {exc}")
-                msgbox.setWindowIcon(ICON)
+                                                    f" Details:\n{type(exc).__name__}: {exc}")
+                msgbox.setWindowIcon(icon)
                 msgbox.exec()
             else:
                 print("Configuration file could not be read. Please make "
@@ -150,7 +156,10 @@ def read_config(args_: argparse.Namespace) -> Config:
 
 def organize_folders_cli(config: Config,
                          args_: argparse.Namespace):
-    """Organizes the folders. Main component of MyOrganizer."""
+    """Organizes the folders. Main part of MyOrganizer."""
+
+    file_val = 0
+
     for folder in config.folders_to_organize:
         if folder.startswith("$"):
             folder = folder.replace("$HOME", str(Path.home()))
@@ -161,15 +170,18 @@ def organize_folders_cli(config: Config,
                 print(f"Folder {folder_path.resolve()} does not exist."
                       " Please double-check the path.")
 
-        files = list(folder_path.glob("*"))
+        files = list(folder_path.iterdir())
 
-        for file in files:
-            files.remove(file)
-            folder_name = get_folder_name(file=file, files=files,
-                                          config=config, args_=args_)
+        while files:
+            file = files.pop(0)
+            folder_name = get_folder_name(
+                file=file, files=files, config=config, args_=args_)
             handle_file(file=file, parent_folder=folder,
                         folder_name=folder_name, args_=args_,
                         update_function=print)
+            file_val += 1
+    if not args_.quiet:
+        print(f"Processed {file_val} files in {len(config.folders_to_organize)} folders.")
 
 
 if __name__ == "__main__":
